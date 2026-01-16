@@ -246,11 +246,11 @@ const PRESET_TEMPLATES = {
         'astm_basic_result': {
             name: 'Basic ASTM Result',
             nodes: [
-                { id: 'p1', type: 'H', fields: [{ name: 5, value: 'Analyzer' }], parentId: null },
-                { id: 'p2', type: 'P', fields: [{ name: 3, value: 'PatientID' }], parentId: null },
-                { id: 'p3', type: 'O', fields: [{ name: 3, value: 'SampleID' }], parentId: null },
-                { id: 'p4', type: 'R', fields: [{ name: 3, value: 'TestCode' }, { name: 4, value: '100' }], parentId: null },
-                { id: 'p5', type: 'L', fields: [], parentId: null }
+                { id: 'p1', type: 'H', fields: [{ name: 1, value: '1' }, { name: 5, value: 'Analyzer' }], parentId: null },
+                { id: 'p2', type: 'P', fields: [{ name: 1, value: '1' }, { name: 3, value: 'PatientID' }], parentId: null },
+                { id: 'p3', type: 'O', fields: [{ name: 1, value: '1' }, { name: 3, value: 'SampleID' }], parentId: null },
+                { id: 'p4', type: 'R', fields: [{ name: 1, value: '1' }, { name: 3, value: 'TestCode' }, { name: 4, value: '100' }], parentId: null },
+                { id: 'p5', type: 'L', fields: [{ name: 1, value: '1' }], parentId: null }
             ]
         }
     },
@@ -759,9 +759,23 @@ function updateNodePreview(nodeId) {
     const preview = nodeEl.querySelector('.node-preview');
     if (!preview) return;
     
-    // Show first 2-3 field values as preview
-    const previewFields = node.fields.slice(0, 3).map(f => f.value).filter(Boolean);
-    preview.textContent = previewFields.join(' | ') || '';
+    // Build preview based on format - show like the output
+    const format = state.currentFormat;
+    let previewText = '';
+    
+    if (format === 'astm' || format === 'hl7') {
+        // For ASTM/HL7, show fields joined by | like the actual output
+        const fields = buildFieldArray(node.fields);
+        previewText = fields.join('|');
+    } else {
+        // For XML formats, show attribute=value pairs
+        const previewFields = node.fields.slice(0, 3)
+            .filter(f => f.value)
+            .map(f => `${f.name}="${f.value}"`);
+        previewText = previewFields.join(' ');
+    }
+    
+    preview.textContent = previewText;
 }
 
 // ============================================
@@ -809,10 +823,23 @@ function createNodeElement(node) {
     const badge = nodeEl.querySelector('.node-type-badge');
     badge.textContent = node.type;
     
-    // Set preview
+    // Set preview based on format - show like the output
     const preview = nodeEl.querySelector('.node-preview');
-    const previewFields = node.fields.slice(0, 3).map(f => f.value).filter(Boolean);
-    preview.textContent = previewFields.join(' | ') || '';
+    const format = state.currentFormat;
+    let previewText = '';
+    
+    if (format === 'astm' || format === 'hl7') {
+        // For ASTM/HL7, show fields joined by | like the actual output
+        const fields = buildFieldArray(node.fields);
+        previewText = fields.join('|');
+    } else {
+        // For XML formats, show attribute=value pairs
+        const previewFields = node.fields.slice(0, 3)
+            .filter(f => f.value)
+            .map(f => `${f.name}="${f.value}"`);
+        previewText = previewFields.join(' ');
+    }
+    preview.textContent = previewText;
     
     // Handle children
     const childrenContainer = nodeEl.querySelector('.node-children');
@@ -1299,11 +1326,9 @@ function buildMessage(format) {
 
 function buildAstmMessage(nodes) {
     const lines = [];
-    let sequenceNum = 1;
     
     nodes.forEach(node => {
-        const fields = buildFieldArray(node.fields, 14);
-        fields[0] = sequenceNum++;
+        const fields = buildFieldArray(node.fields);
         const line = `${node.type}|${fields.join('|')}`;
         lines.push(line);
     });
@@ -1315,11 +1340,12 @@ function buildHl7Message(nodes) {
     const lines = [];
     
     nodes.forEach(node => {
+        const fields = buildFieldArray(node.fields);
         if (node.type === 'MSH') {
-            const fields = buildFieldArray(node.fields, 20);
+            // MSH has special handling - field 1 is |, field 2 is ^~\&
+            // So user fields start at position 3
             lines.push(`MSH|^~\\&|${fields.slice(2).join('|')}`);
         } else {
-            const fields = buildFieldArray(node.fields, 20);
             lines.push(`${node.type}|${fields.join('|')}`);
         }
     });
@@ -1415,11 +1441,25 @@ function buildXmlMessage(nodes, format) {
     return output;
 }
 
-function buildFieldArray(fields, maxFields) {
-    const result = new Array(maxFields).fill('');
+function buildFieldArray(fields) {
+    if (fields.length === 0) return [];
+    
+    // Find the maximum field position
+    let maxIndex = 0;
+    fields.forEach(field => {
+        const index = parseInt(field.name);
+        if (!isNaN(index) && index > maxIndex) {
+            maxIndex = index;
+        }
+    });
+    
+    if (maxIndex === 0) return [];
+    
+    // Create array only up to the last defined field
+    const result = new Array(maxIndex).fill('');
     fields.forEach(field => {
         const index = parseInt(field.name) - 1;
-        if (index >= 0 && index < maxFields) {
+        if (index >= 0 && index < maxIndex) {
             result[index] = field.value || '';
         }
     });
@@ -1517,22 +1557,38 @@ function highlightXml(text) {
     // XML declaration
     result = result.replace(/(&lt;\?xml[^?]*\?&gt;)/g, '<span class="hl-comment">$1</span>');
     
-    // Self-closing tags
-    result = result.replace(/(&lt;)(\w+)((?:\s+[\w:]+="[^"]*")*)(\s*\/&gt;)/g, (match, open, tag, attrs, close) => {
-        const highlightedAttrs = attrs.replace(/([\w:]+)="([^"]*)"/g, 
-            '<span class="hl-attr">$1</span>=<span class="hl-attr-value">"$2"</span>');
-        return `${open}<span class="hl-tag">${tag}</span>${highlightedAttrs}${close}`;
+    // Self-closing tags with attributes: <Tag attr="value"/>
+    result = result.replace(/(&lt;)([\w\.\-:]+)((?:\s+[\w\.\-:]+="[^"]*")*)(\s*\/&gt;)/g, (match, open, tag, attrs, close) => {
+        let highlightedAttrs = '';
+        if (attrs) {
+            highlightedAttrs = attrs.replace(/([\w\.\-:]+)="([^"]*)"/g, 
+                ' <span class="hl-attr">$1</span>=<span class="hl-attr-value">"$2"</span>');
+        }
+        return `<span class="hl-delimiter">${open}</span><span class="hl-tag">${tag}</span>${highlightedAttrs}<span class="hl-delimiter">${close}</span>`;
     });
     
-    // Opening tags
-    result = result.replace(/(&lt;)(\w+)((?:\s+[\w:]+="[^"]*")*)(&gt;)/g, (match, open, tag, attrs, close) => {
-        const highlightedAttrs = attrs.replace(/([\w:]+)="([^"]*)"/g, 
-            '<span class="hl-attr">$1</span>=<span class="hl-attr-value">"$2"</span>');
-        return `${open}<span class="hl-tag">${tag}</span>${highlightedAttrs}${close}`;
+    // Opening tags with attributes: <Tag attr="value">
+    result = result.replace(/(&lt;)([\w\.\-:]+)((?:\s+[\w\.\-:]+="[^"]*")*)(&gt;)/g, (match, open, tag, attrs, close) => {
+        let highlightedAttrs = '';
+        if (attrs) {
+            highlightedAttrs = attrs.replace(/([\w\.\-:]+)="([^"]*)"/g, 
+                ' <span class="hl-attr">$1</span>=<span class="hl-attr-value">"$2"</span>');
+        }
+        return `<span class="hl-delimiter">${open}</span><span class="hl-tag">${tag}</span>${highlightedAttrs}<span class="hl-delimiter">${close}</span>`;
     });
     
-    // Closing tags
-    result = result.replace(/(&lt;\/)(\w+)(&gt;)/g, '$1<span class="hl-tag">$2</span>$3');
+    // Closing tags: </Tag>
+    result = result.replace(/(&lt;\/)([\w\.\-:]+)(&gt;)/g, 
+        '<span class="hl-delimiter">$1</span><span class="hl-tag">$2</span><span class="hl-delimiter">$3</span>');
+    
+    // Text content between tags (anything not inside a span already)
+    result = result.replace(/(&gt;)([^<]+)(&lt;)/g, (match, open, text, close) => {
+        const trimmed = text.trim();
+        if (trimmed && !text.includes('class=')) {
+            return `${open}<span class="hl-text">${text}</span>${close}`;
+        }
+        return match;
+    });
     
     return result;
 }
@@ -2161,6 +2217,7 @@ function setupEventListeners() {
                 state.nodes = [];
                 state.selectedNodeId = null;
                 state.currentFormat = newFormat;
+                elements.outputFormatSelect.value = newFormat;
                 localStorage.setItem(CONFIG.STORAGE_KEYS.LAST_FORMAT, newFormat);
                 updateFileUploadAccept();
                 updateTemplateDropdown();
@@ -2168,7 +2225,7 @@ function setupEventListeners() {
                 updatePropertiesSidebar();
                 updateOutput();
             };
-            // Reset dropdown to old value
+            // Reset dropdown to old value temporarily
             elements.outputFormatSelect.value = oldFormat;
             showModal(elements.confirmModal);
             return;

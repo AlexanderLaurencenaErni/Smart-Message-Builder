@@ -1107,10 +1107,11 @@ body {
 .hl-value { color: #f472b6; }
 .hl-special { color: #f97316; font-weight: 600; }
 .hl-cr { color: #ef4444; font-style: italic; }
-.hl-tag { color: #f472b6; }
-.hl-attr { color: #60a5fa; }
-.hl-attr-value { color: #22c55e; }
-.hl-text { color: #f1f5f9; }
+/* XML/POCT1-A Highlighting */
+.hl-tag { color: #f472b6; font-weight: 500; }        /* Element names - pink */
+.hl-attr { color: #60a5fa; }                          /* Attribute names - blue */
+.hl-attr-value { color: #22c55e; }                    /* Attribute values - green */
+.hl-text { color: #fbbf24; }                          /* Element text content - yellow/amber */
 .hl-comment { color: #64748b; font-style: italic; }
 
 /* ============================================
