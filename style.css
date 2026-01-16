@@ -686,6 +686,48 @@ body {
 .property-select:hover { border-color: var(--color-border-light); }
 .property-select:focus { outline: none; border-color: var(--color-accent); }
 
+/* Custom Node Input for POCT1-A */
+.custom-node-input {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--color-bg-tertiary);
+    border: 1px dashed var(--color-accent);
+    border-radius: var(--radius-md);
+}
+
+.custom-node-input.hidden {
+    display: none;
+}
+
+.property-label-small {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.property-label-small svg {
+    width: 12px;
+    height: 12px;
+}
+
+.property-input {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-family: var(--font-mono);
+}
+
+.property-input:hover { border-color: var(--color-border-light); }
+.property-input:focus { outline: none; border-color: var(--color-accent); }
+
 .property-add-btn {
     display: flex;
     align-items: center;

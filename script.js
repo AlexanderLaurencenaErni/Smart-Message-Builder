@@ -50,6 +50,8 @@ const elements = {
     propertiesEmpty: document.getElementById('properties-empty'),
     propertiesForm: document.getElementById('properties-form'),
     nodeTypeSelect: document.getElementById('node-type-select'),
+    customNodeNameGroup: document.getElementById('custom-node-name-group'),
+    customNodeNameInput: document.getElementById('custom-node-name'),
     fieldsContainer: document.getElementById('fields-container'),
     addFieldBtn: document.getElementById('add-field-btn'),
     duplicateNodeBtn: document.getElementById('duplicate-node-btn'),
@@ -192,47 +194,226 @@ const RECORD_TYPES = {
         { value: 'UAC', label: 'UAC - User Authentication Credential' }
     ],
     poct1a: [
-        // Message Types (root elements)
-        { value: 'OBS.R02', label: 'OBS.R02 - Observation Result', allowsChildren: true, isRoot: true },
-        { value: 'OBS.R01', label: 'OBS.R01 - Observation', allowsChildren: true, isRoot: true },
+        // ===== MESSAGE TYPES (Root Elements) - POCT1-A2 Standard =====
+        { value: 'OBS.R02', label: 'OBS.R02 - Observation Result (Device→DMS)', allowsChildren: true, isRoot: true },
+        { value: 'OBS.R01', label: 'OBS.R01 - Unsolicited Observation (Device→DMS)', allowsChildren: true, isRoot: true },
         { value: 'ACK.R01', label: 'ACK.R01 - Acknowledgment', allowsChildren: true, isRoot: true },
-        { value: 'DOR.R01', label: 'DOR.R01 - Device Observation', allowsChildren: true, isRoot: true },
-        // Segment Types
-        { value: 'HDR', label: 'HDR - Header', allowsChildren: true },
-        { value: 'SVC', label: 'SVC - Service', allowsChildren: true },
-        { value: 'CTC', label: 'CTC - Control (QC)', allowsChildren: true },
-        { value: 'OBS', label: 'OBS - Observation', allowsChildren: true },
+        { value: 'DOR.R01', label: 'DOR.R01 - Device Observation Request (DMS→Device)', allowsChildren: true, isRoot: true },
+        { value: 'ESU.U01', label: 'ESU.U01 - Device Status Update', allowsChildren: true, isRoot: true },
+        { value: 'EAC.U07', label: 'EAC.U07 - Device Action Request', allowsChildren: true, isRoot: true },
+        { value: 'TCU.U10', label: 'TCU.U10 - Topic Configuration Update', allowsChildren: true, isRoot: true },
+        { value: 'INR.U14', label: 'INR.U14 - Inventory Request', allowsChildren: true, isRoot: true },
+        { value: 'HLO', label: 'HLO - Hello Message (Device→DMS)', allowsChildren: true, isRoot: true },
+        { value: 'END', label: 'END - End Session Message', allowsChildren: true, isRoot: true },
+        
+        // ===== SEGMENT TYPES - POCT1-A2 Standard (Appendix B - DML) =====
+        { value: 'HDR', label: 'HDR - Header (Message Header)', allowsChildren: true },
+        { value: 'DEV', label: 'DEV - Device Identification', allowsChildren: true },
         { value: 'OPR', label: 'OPR - Operator', allowsChildren: true },
-        { value: 'RGT', label: 'RGT - Reagent', allowsChildren: true },
-        { value: 'ENV', label: 'ENV - Environment', allowsChildren: true },
-        { value: 'ISC', label: 'ISC - Internal Standard Check', allowsChildren: false },
-        { value: 'NTE', label: 'NTE - Note', allowsChildren: false },
         { value: 'SBJ', label: 'SBJ - Subject/Patient', allowsChildren: true },
         { value: 'SPC', label: 'SPC - Specimen', allowsChildren: true },
-        { value: 'DVC', label: 'DVC - Device', allowsChildren: true },
-        // Field elements (child elements with V attribute)
-        { value: 'HDR.control_id', label: 'HDR.control_id', allowsChildren: false },
-        { value: 'HDR.version_id', label: 'HDR.version_id', allowsChildren: false },
-        { value: 'HDR.creation_dttm', label: 'HDR.creation_dttm', allowsChildren: false },
-        { value: 'SVC.role_cd', label: 'SVC.role_cd', allowsChildren: false },
-        { value: 'SVC.observation_dttm', label: 'SVC.observation_dttm', allowsChildren: false },
-        { value: 'SVC.status_cd', label: 'SVC.status_cd', allowsChildren: false },
-        { value: 'SVC.reason_cd', label: 'SVC.reason_cd', allowsChildren: false },
-        { value: 'SVC.sequence_nbr', label: 'SVC.sequence_nbr', allowsChildren: false },
-        { value: 'CTC.name', label: 'CTC.name', allowsChildren: false },
-        { value: 'CTC.lot_number', label: 'CTC.lot_number', allowsChildren: false },
-        { value: 'CTC.expiration_date', label: 'CTC.expiration_date', allowsChildren: false },
-        { value: 'CTC.level_cd', label: 'CTC.level_cd', allowsChildren: false },
-        { value: 'OBS.observation_id', label: 'OBS.observation_id', allowsChildren: false },
-        { value: 'OBS.value', label: 'OBS.value', allowsChildren: false },
-        { value: 'OBS.method_cd', label: 'OBS.method_cd', allowsChildren: false },
-        { value: 'OBS.status_cd', label: 'OBS.status_cd', allowsChildren: false },
-        { value: 'OBS.normal_lo-hi_limit', label: 'OBS.normal_lo-hi_limit', allowsChildren: false },
-        { value: 'OPR.operator_id', label: 'OPR.operator_id', allowsChildren: false },
-        { value: 'RGT.name', label: 'RGT.name', allowsChildren: false },
-        { value: 'RGT.lot_number', label: 'RGT.lot_number', allowsChildren: false },
-        { value: 'RGT.expiration_date', label: 'RGT.expiration_date', allowsChildren: false },
-        { value: 'NTE.text', label: 'NTE.text', allowsChildren: false }
+        { value: 'ORD', label: 'ORD - Order (Test Order)', allowsChildren: true },
+        { value: 'OBS', label: 'OBS - Observation (Test Result)', allowsChildren: true },
+        { value: 'CTC', label: 'CTC - Control (QC Material)', allowsChildren: true },
+        { value: 'CAL', label: 'CAL - Calibration', allowsChildren: true },
+        { value: 'RGT', label: 'RGT - Reagent/Consumable', allowsChildren: true },
+        { value: 'ENV', label: 'ENV - Environment Conditions', allowsChildren: true },
+        { value: 'STS', label: 'STS - Status', allowsChildren: true },
+        { value: 'NTE', label: 'NTE - Note/Comment', allowsChildren: false },
+        { value: 'ERR', label: 'ERR - Error', allowsChildren: true },
+        { value: 'SVC', label: 'SVC - Service', allowsChildren: true },
+        { value: 'INV', label: 'INV - Inventory', allowsChildren: true },
+        { value: 'CFG', label: 'CFG - Configuration', allowsChildren: true },
+        { value: 'ACT', label: 'ACT - Action', allowsChildren: true },
+        { value: 'ACC', label: 'ACC - Access Control', allowsChildren: true },
+        { value: 'CAP', label: 'CAP - Device Capabilities', allowsChildren: true },
+        { value: 'TPC', label: 'TPC - Topic', allowsChildren: true },
+        { value: 'LST', label: 'LST - List (Operator/Patient)', allowsChildren: true },
+        { value: 'EVT', label: 'EVT - Device Event', allowsChildren: true },
+        
+        // ===== HDR ELEMENTS (Header) =====
+        { value: 'HDR.control_id', label: 'HDR.control_id - Message Control ID', allowsChildren: false },
+        { value: 'HDR.version_id', label: 'HDR.version_id - Protocol Version', allowsChildren: false },
+        { value: 'HDR.creation_dttm', label: 'HDR.creation_dttm - Creation Date/Time', allowsChildren: false },
+        { value: 'HDR.character_set', label: 'HDR.character_set - Character Set', allowsChildren: false },
+        { value: 'HDR.sending_device', label: 'HDR.sending_device - Sending Device ID', allowsChildren: false },
+        { value: 'HDR.receiving_device', label: 'HDR.receiving_device - Receiving Device ID', allowsChildren: false },
+        { value: 'HDR.processing_id', label: 'HDR.processing_id - Processing ID (T/D/P)', allowsChildren: false },
+        
+        // ===== DEV ELEMENTS (Device) =====
+        { value: 'DEV.device_id', label: 'DEV.device_id - Device Identifier (EUI-64)', allowsChildren: false },
+        { value: 'DEV.device_type', label: 'DEV.device_type - Device Type', allowsChildren: false },
+        { value: 'DEV.vendor_id', label: 'DEV.vendor_id - Vendor Identifier', allowsChildren: false },
+        { value: 'DEV.manufacturer', label: 'DEV.manufacturer - Manufacturer', allowsChildren: false },
+        { value: 'DEV.model', label: 'DEV.model - Model Name', allowsChildren: false },
+        { value: 'DEV.model_id', label: 'DEV.model_id - Model Identifier', allowsChildren: false },
+        { value: 'DEV.serial_nbr', label: 'DEV.serial_nbr - Serial Number', allowsChildren: false },
+        { value: 'DEV.serial_id', label: 'DEV.serial_id - Serial Identifier', allowsChildren: false },
+        { value: 'DEV.software_version', label: 'DEV.software_version - Software Version', allowsChildren: false },
+        { value: 'DEV.firmware_version', label: 'DEV.firmware_version - Firmware Version', allowsChildren: false },
+        { value: 'DEV.condition_cd', label: 'DEV.condition_cd - Device Condition Code', allowsChildren: false },
+        
+        // ===== OPR ELEMENTS (Operator) =====
+        { value: 'OPR.operator_id', label: 'OPR.operator_id - Operator ID', allowsChildren: false },
+        { value: 'OPR.operator_name', label: 'OPR.operator_name - Operator Name', allowsChildren: false },
+        { value: 'OPR.role_cd', label: 'OPR.role_cd - Role Code', allowsChildren: false },
+        { value: 'OPR.permission_level_cd', label: 'OPR.permission_level_cd - Permission Level', allowsChildren: false },
+        { value: 'OPR.password', label: 'OPR.password - Password', allowsChildren: false },
+        { value: 'OPR.expiration_dttm', label: 'OPR.expiration_dttm - Expiration Date', allowsChildren: false },
+        
+        // ===== SBJ ELEMENTS (Subject/Patient) =====
+        { value: 'SBJ.patient_id', label: 'SBJ.patient_id - Patient ID', allowsChildren: false },
+        { value: 'SBJ.patient_name', label: 'SBJ.patient_name - Patient Name', allowsChildren: false },
+        { value: 'SBJ.birth_dttm', label: 'SBJ.birth_dttm - Birth Date', allowsChildren: false },
+        { value: 'SBJ.gender_cd', label: 'SBJ.gender_cd - Gender Code', allowsChildren: false },
+        { value: 'SBJ.location', label: 'SBJ.location - Patient Location', allowsChildren: false },
+        { value: 'SBJ.account_nbr', label: 'SBJ.account_nbr - Account Number', allowsChildren: false },
+        { value: 'SBJ.medical_record_nbr', label: 'SBJ.medical_record_nbr - Medical Record Number', allowsChildren: false },
+        
+        // ===== SPC ELEMENTS (Specimen) =====
+        { value: 'SPC.specimen_id', label: 'SPC.specimen_id - Specimen ID', allowsChildren: false },
+        { value: 'SPC.specimen_type', label: 'SPC.specimen_type - Specimen Type', allowsChildren: false },
+        { value: 'SPC.collection_dttm', label: 'SPC.collection_dttm - Collection Date/Time', allowsChildren: false },
+        { value: 'SPC.source_cd', label: 'SPC.source_cd - Specimen Source', allowsChildren: false },
+        { value: 'SPC.body_site', label: 'SPC.body_site - Body Site', allowsChildren: false },
+        { value: 'SPC.action_cd', label: 'SPC.action_cd - Specimen Action Code', allowsChildren: false },
+        
+        // ===== ORD ELEMENTS (Order) =====
+        { value: 'ORD.order_id', label: 'ORD.order_id - Order ID', allowsChildren: false },
+        { value: 'ORD.accession_nbr', label: 'ORD.accession_nbr - Accession Number', allowsChildren: false },
+        { value: 'ORD.test_cd', label: 'ORD.test_cd - Test Code', allowsChildren: false },
+        { value: 'ORD.priority_cd', label: 'ORD.priority_cd - Priority Code', allowsChildren: false },
+        { value: 'ORD.order_control', label: 'ORD.order_control - Order Control Code', allowsChildren: false },
+        { value: 'ORD.ordering_provider', label: 'ORD.ordering_provider - Ordering Provider', allowsChildren: false },
+        
+        // ===== OBS ELEMENTS (Observation) =====
+        { value: 'OBS.observation_id', label: 'OBS.observation_id - Observation ID', allowsChildren: false },
+        { value: 'OBS.value', label: 'OBS.value - Result Value', allowsChildren: false },
+        { value: 'OBS.value_type', label: 'OBS.value_type - Value Type (ST/NM/CE)', allowsChildren: false },
+        { value: 'OBS.units', label: 'OBS.units - Units', allowsChildren: false },
+        { value: 'OBS.observation_dttm', label: 'OBS.observation_dttm - Observation Date/Time', allowsChildren: false },
+        { value: 'OBS.method_cd', label: 'OBS.method_cd - Method Code', allowsChildren: false },
+        { value: 'OBS.status_cd', label: 'OBS.status_cd - Status Code (F/P/C)', allowsChildren: false },
+        { value: 'OBS.reference_range', label: 'OBS.reference_range - Reference Range', allowsChildren: false },
+        { value: 'OBS.interpretation_cd', label: 'OBS.interpretation_cd - Interpretation Code', allowsChildren: false },
+        { value: 'OBS.abnormal_flag', label: 'OBS.abnormal_flag - Abnormal Flag (H/L/N)', allowsChildren: false },
+        { value: 'OBS.loinc_cd', label: 'OBS.loinc_cd - LOINC Code', allowsChildren: false },
+        { value: 'OBS.equipment_id', label: 'OBS.equipment_id - Equipment Instance ID', allowsChildren: false },
+        { value: 'OBS.responsible_observer', label: 'OBS.responsible_observer - Responsible Observer', allowsChildren: false },
+        
+        // ===== CTC ELEMENTS (Control/QC) =====
+        { value: 'CTC.control_id', label: 'CTC.control_id - Control ID', allowsChildren: false },
+        { value: 'CTC.name', label: 'CTC.name - Control Name', allowsChildren: false },
+        { value: 'CTC.lot_nbr', label: 'CTC.lot_nbr - Lot Number', allowsChildren: false },
+        { value: 'CTC.material_lot_number', label: 'CTC.material_lot_number - Material Lot Number', allowsChildren: false },
+        { value: 'CTC.expiration_dttm', label: 'CTC.expiration_dttm - Expiration Date', allowsChildren: false },
+        { value: 'CTC.level_cd', label: 'CTC.level_cd - Level Code', allowsChildren: false },
+        { value: 'CTC.expected_value', label: 'CTC.expected_value - Expected Value', allowsChildren: false },
+        { value: 'CTC.target_range', label: 'CTC.target_range - Target Range', allowsChildren: false },
+        { value: 'CTC.manufacturer', label: 'CTC.manufacturer - Manufacturer', allowsChildren: false },
+        
+        // ===== CAL ELEMENTS (Calibration) =====
+        { value: 'CAL.calibration_id', label: 'CAL.calibration_id - Calibration ID', allowsChildren: false },
+        { value: 'CAL.calibration_dttm', label: 'CAL.calibration_dttm - Calibration Date/Time', allowsChildren: false },
+        { value: 'CAL.lot_nbr', label: 'CAL.lot_nbr - Calibrator Lot Number', allowsChildren: false },
+        { value: 'CAL.expiration_dttm', label: 'CAL.expiration_dttm - Expiration Date', allowsChildren: false },
+        { value: 'CAL.status_cd', label: 'CAL.status_cd - Calibration Status', allowsChildren: false },
+        { value: 'CAL.slope', label: 'CAL.slope - Calibration Slope', allowsChildren: false },
+        { value: 'CAL.intercept', label: 'CAL.intercept - Calibration Intercept', allowsChildren: false },
+        
+        // ===== RGT ELEMENTS (Reagent) =====
+        { value: 'RGT.reagent_id', label: 'RGT.reagent_id - Reagent ID', allowsChildren: false },
+        { value: 'RGT.name', label: 'RGT.name - Reagent Name', allowsChildren: false },
+        { value: 'RGT.lot_nbr', label: 'RGT.lot_nbr - Lot Number', allowsChildren: false },
+        { value: 'RGT.expiration_dttm', label: 'RGT.expiration_dttm - Expiration Date', allowsChildren: false },
+        { value: 'RGT.quantity', label: 'RGT.quantity - Quantity Remaining', allowsChildren: false },
+        { value: 'RGT.manufacturer', label: 'RGT.manufacturer - Manufacturer', allowsChildren: false },
+        { value: 'RGT.catalog_nbr', label: 'RGT.catalog_nbr - Catalog Number', allowsChildren: false },
+        
+        // ===== ENV ELEMENTS (Environment) =====
+        { value: 'ENV.temperature', label: 'ENV.temperature - Temperature', allowsChildren: false },
+        { value: 'ENV.humidity', label: 'ENV.humidity - Humidity', allowsChildren: false },
+        { value: 'ENV.pressure', label: 'ENV.pressure - Atmospheric Pressure', allowsChildren: false },
+        
+        // ===== STS ELEMENTS (Status) =====
+        { value: 'STS.status_cd', label: 'STS.status_cd - Status Code', allowsChildren: false },
+        { value: 'STS.status_dttm', label: 'STS.status_dttm - Status Date/Time', allowsChildren: false },
+        { value: 'STS.reason_cd', label: 'STS.reason_cd - Reason Code', allowsChildren: false },
+        { value: 'STS.condition_cd', label: 'STS.condition_cd - Condition Code (R/B/E)', allowsChildren: false },
+        
+        // ===== ERR ELEMENTS (Error) =====
+        { value: 'ERR.error_cd', label: 'ERR.error_cd - Error Code', allowsChildren: false },
+        { value: 'ERR.error_msg', label: 'ERR.error_msg - Error Message', allowsChildren: false },
+        { value: 'ERR.severity_cd', label: 'ERR.severity_cd - Severity Code', allowsChildren: false },
+        
+        // ===== SVC ELEMENTS (Service) =====
+        { value: 'SVC.role_cd', label: 'SVC.role_cd - Role Code (PAT/LQC/AQC)', allowsChildren: false },
+        { value: 'SVC.observation_dttm', label: 'SVC.observation_dttm - Observation Date/Time', allowsChildren: false },
+        { value: 'SVC.status_cd', label: 'SVC.status_cd - Status Code', allowsChildren: false },
+        { value: 'SVC.reason_cd', label: 'SVC.reason_cd - Reason Code', allowsChildren: false },
+        { value: 'SVC.sequence_nbr', label: 'SVC.sequence_nbr - Sequence Number', allowsChildren: false },
+        
+        // ===== ACC ELEMENTS (Access Control) =====
+        { value: 'ACC.permission_level_cd', label: 'ACC.permission_level_cd - Permission Level Code', allowsChildren: false },
+        { value: 'ACC.access_type', label: 'ACC.access_type - Access Type', allowsChildren: false },
+        { value: 'ACC.effective_dttm', label: 'ACC.effective_dttm - Effective Date/Time', allowsChildren: false },
+        { value: 'ACC.expiration_dttm', label: 'ACC.expiration_dttm - Expiration Date/Time', allowsChildren: false },
+        
+        // ===== CAP ELEMENTS (Device Capabilities) =====
+        { value: 'CAP.max_message_sz', label: 'CAP.max_message_sz - Max Message Size (bytes)', allowsChildren: false },
+        { value: 'CAP.supported_topics', label: 'CAP.supported_topics - Supported Topics', allowsChildren: false },
+        { value: 'CAP.supported_services', label: 'CAP.supported_services - Supported Services', allowsChildren: false },
+        { value: 'CAP.protocol_version', label: 'CAP.protocol_version - Protocol Version', allowsChildren: false },
+        
+        // ===== TPC ELEMENTS (Topic) =====
+        { value: 'TPC.topic_id', label: 'TPC.topic_id - Topic Identifier', allowsChildren: false },
+        { value: 'TPC.update_dttm', label: 'TPC.update_dttm - Last Update Date/Time', allowsChildren: false },
+        { value: 'TPC.observations_update_dttm', label: 'TPC.observations_update_dttm - Observations Update Time', allowsChildren: false },
+        { value: 'TPC.operator_list_update_dttm', label: 'TPC.operator_list_update_dttm - Operator List Update Time', allowsChildren: false },
+        { value: 'TPC.patient_list_update_dttm', label: 'TPC.patient_list_update_dttm - Patient List Update Time', allowsChildren: false },
+        
+        // ===== LST ELEMENTS (List) =====
+        { value: 'LST.list_type', label: 'LST.list_type - List Type (OPR/PAT)', allowsChildren: false },
+        { value: 'LST.list_id', label: 'LST.list_id - List Identifier', allowsChildren: false },
+        { value: 'LST.update_dttm', label: 'LST.update_dttm - Update Date/Time', allowsChildren: false },
+        { value: 'LST.item_count', label: 'LST.item_count - Item Count', allowsChildren: false },
+        
+        // ===== EVT ELEMENTS (Device Event) =====
+        { value: 'EVT.event_type', label: 'EVT.event_type - Event Type', allowsChildren: false },
+        { value: 'EVT.event_dttm', label: 'EVT.event_dttm - Event Date/Time', allowsChildren: false },
+        { value: 'EVT.event_cd', label: 'EVT.event_cd - Event Code', allowsChildren: false },
+        { value: 'EVT.event_msg', label: 'EVT.event_msg - Event Message', allowsChildren: false },
+        
+        // ===== INV ELEMENTS (Inventory) =====
+        { value: 'INV.item_id', label: 'INV.item_id - Item Identifier', allowsChildren: false },
+        { value: 'INV.item_type', label: 'INV.item_type - Item Type', allowsChildren: false },
+        { value: 'INV.quantity', label: 'INV.quantity - Quantity', allowsChildren: false },
+        { value: 'INV.status_cd', label: 'INV.status_cd - Inventory Status', allowsChildren: false },
+        
+        // ===== CFG ELEMENTS (Configuration) =====
+        { value: 'CFG.config_id', label: 'CFG.config_id - Configuration ID', allowsChildren: false },
+        { value: 'CFG.config_value', label: 'CFG.config_value - Configuration Value', allowsChildren: false },
+        { value: 'CFG.config_type', label: 'CFG.config_type - Configuration Type', allowsChildren: false },
+        
+        // ===== ACT ELEMENTS (Action) =====
+        { value: 'ACT.action_id', label: 'ACT.action_id - Action Identifier', allowsChildren: false },
+        { value: 'ACT.action_type', label: 'ACT.action_type - Action Type', allowsChildren: false },
+        { value: 'ACT.action_dttm', label: 'ACT.action_dttm - Action Date/Time', allowsChildren: false },
+        { value: 'ACT.action_status', label: 'ACT.action_status - Action Status', allowsChildren: false },
+        
+        // ===== NTE ELEMENTS (Note) =====
+        { value: 'NTE.text', label: 'NTE.text - Note Text', allowsChildren: false },
+        { value: 'NTE.source_cd', label: 'NTE.source_cd - Source Code', allowsChildren: false },
+        { value: 'NTE.set_id', label: 'NTE.set_id - Set ID', allowsChildren: false },
+        
+        // ===== ACK ELEMENTS (Acknowledgment) =====
+        { value: 'ACK.ack_cd', label: 'ACK.ack_cd - Acknowledgment Code (AA/AE/AR)', allowsChildren: false },
+        { value: 'ACK.message_control_id', label: 'ACK.message_control_id - Referenced Message ID', allowsChildren: false },
+        { value: 'ACK.text_message', label: 'ACK.text_message - Text Message', allowsChildren: false },
+        { value: 'ACK.error_cd', label: 'ACK.error_cd - Error Code', allowsChildren: false },
+        
+        // ===== CUSTOM NODE PLACEHOLDER =====
+        { value: 'CUSTOM', label: '✏️ Custom Node (Edit name below)', allowsChildren: true, isCustom: true }
     ],
     xml_request: [],
     xml_result: []
@@ -718,10 +899,27 @@ function selectNode(nodeId) {
 
 function updateNodeType(nodeId, newType) {
     const node = getNodeById(nodeId);
-    if (!node || node.type === newType) return;
+    if (!node) return;
+    
+    // Handle custom node type for POCT1-A
+    if (state.currentFormat === 'poct1a' && newType === 'CUSTOM') {
+        // Show custom name input
+        elements.customNodeNameGroup.classList.remove('hidden');
+        elements.customNodeNameInput.value = node.customTypeName || '';
+        elements.customNodeNameInput.focus();
+        return; // Don't update type yet, wait for custom name input
+    }
+    
+    // Hide custom name input for non-custom types
+    if (elements.customNodeNameGroup) {
+        elements.customNodeNameGroup.classList.add('hidden');
+    }
+    
+    if (node.type === newType) return;
     
     saveStateForUndo();
     node.type = newType;
+    node.customTypeName = null; // Clear custom name when switching to standard type
     
     // Update tree display
     const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
@@ -729,6 +927,28 @@ function updateNodeType(nodeId, newType) {
         const badge = nodeEl.querySelector('.node-type-badge');
         if (badge) badge.textContent = newType;
     }
+    
+    updateOutput();
+}
+
+function updateCustomNodeType(nodeId, customName) {
+    const node = getNodeById(nodeId);
+    if (!node || !customName.trim()) return;
+    
+    saveStateForUndo();
+    node.type = customName.trim();
+    node.customTypeName = customName.trim();
+    
+    // Update tree display
+    const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
+    if (nodeEl) {
+        const badge = nodeEl.querySelector('.node-type-badge');
+        if (badge) badge.textContent = customName.trim();
+    }
+    
+    // Update dropdown to show custom option
+    const customOption = Array.from(elements.nodeTypeSelect.options).find(opt => opt.value === 'CUSTOM');
+    if (customOption) customOption.selected = true;
     
     updateOutput();
 }
@@ -1126,18 +1346,21 @@ function populateTypeSelector(node) {
     const format = state.currentFormat;
     let recordTypes = getRecordTypes(format);
     
-    // For POCT1-A, filter based on context
+    // For POCT1-A, filter based on context but always keep CUSTOM option
     if (format === 'poct1a') {
         if (!node.parentId) {
-            // Root nodes should only show message types
-            recordTypes = recordTypes.filter(t => t.isRoot);
+            // Root nodes should only show message types plus CUSTOM
+            recordTypes = recordTypes.filter(t => t.isRoot || t.isCustom);
         } else {
-            // Child nodes should show allowed children
+            // Child nodes should show allowed children plus CUSTOM
             const parent = getNodeById(node.parentId);
             if (parent) {
                 const allowedChildren = getAllowedChildren(format, parent.type);
                 if (allowedChildren.length > 0) {
-                    recordTypes = recordTypes.filter(t => allowedChildren.includes(t.value));
+                    recordTypes = recordTypes.filter(t => allowedChildren.includes(t.value) || t.isCustom);
+                } else {
+                    // If no specific allowed children, show all non-root types plus CUSTOM
+                    recordTypes = recordTypes.filter(t => !t.isRoot || t.isCustom);
                 }
             }
         }
@@ -1157,17 +1380,26 @@ function populateTypeSelector(node) {
         const option = document.createElement('option');
         option.value = type.value;
         option.textContent = type.label;
-        option.selected = type.value === node.type;
+        option.selected = type.value === node.type || (type.value === 'CUSTOM' && node.customTypeName);
         elements.nodeTypeSelect.appendChild(option);
     });
     
-    // If current type not in list, add it
-    if (!recordTypes.some(t => t.value === node.type)) {
+    // If current type not in list, add it (for backwards compatibility)
+    if (!recordTypes.some(t => t.value === node.type) && !node.customTypeName) {
         const option = document.createElement('option');
         option.value = node.type;
         option.textContent = node.type;
         option.selected = true;
         elements.nodeTypeSelect.insertBefore(option, elements.nodeTypeSelect.firstChild);
+    }
+    
+    // Handle custom node name input visibility for POCT1-A
+    if (format === 'poct1a' && node.customTypeName) {
+        elements.customNodeNameGroup.classList.remove('hidden');
+        elements.customNodeNameInput.value = node.customTypeName;
+    } else {
+        elements.customNodeNameGroup.classList.add('hidden');
+        elements.customNodeNameInput.value = '';
     }
 }
 
@@ -2286,6 +2518,20 @@ function setupEventListeners() {
     elements.nodeTypeSelect.addEventListener('change', (e) => {
         if (state.selectedNodeId) updateNodeType(state.selectedNodeId, e.target.value);
     });
+    
+    // Custom node name input for POCT1-A
+    elements.customNodeNameInput.addEventListener('input', (e) => {
+        if (state.selectedNodeId && state.currentFormat === 'poct1a') {
+            updateCustomNodeType(state.selectedNodeId, e.target.value);
+        }
+    });
+    elements.customNodeNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            elements.customNodeNameInput.blur();
+        }
+    });
+    
     elements.addFieldBtn.addEventListener('click', () => {
         if (state.selectedNodeId) addFieldToNode(state.selectedNodeId);
     });
