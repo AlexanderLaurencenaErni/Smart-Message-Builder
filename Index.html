@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Message Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#tree-container" class="skip-link">Skip to content</a>
+
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <header class="app-toolbar">
+            <div class="toolbar-section toolbar-brand">
+                <h1 class="app-title">Smart Message Builder</h1>
+                <div id="unsaved-indicator" class="unsaved-indicator hidden">
+                    <span class="unsaved-dot"></span>
+                    <span>Unsaved</span>
+                </div>
+            </div>
+            
+            <div class="toolbar-section toolbar-controls">
+                <div class="toolbar-group">
+                    <label for="outputFormatSelect" class="toolbar-label">Format</label>
+                    <select id="outputFormatSelect" class="toolbar-select">
+                        <option value="astm">ASTM (LIS2-A2)</option>
+                        <option value="hl7">HL7 v2.x</option>
+                        <option value="poct1a">POCT1-A3</option>
+                        <option value="xml_request">XML Request</option>
+                        <option value="xml_result">XML Result</option>
+                    </select>
+                </div>
+
+                <div class="toolbar-group">
+                    <label for="messageTemplate" class="toolbar-label">Template</label>
+                    <div class="toolbar-select-group">
+                        <select id="messageTemplate" class="toolbar-select">
+                            <option value="custom">Custom Message</option>
+                            <optgroup id="preset-templates-group" label="Presets"></optgroup>
+                            <optgroup id="custom-templates-group" label="My Templates"></optgroup>
+                        </select>
+                        <button id="delete-template-btn" class="toolbar-btn-icon danger" title="Delete template">
+                            <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar-section toolbar-actions">
+                <div class="toolbar-group">
+                    <button id="upload-xsd-btn" class="toolbar-btn" title="Load XSD Schema">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                        <span>XSD</span>
+                    </button>
+                    <input type="file" id="xsd-upload-input" class="hidden" accept=".xsd">
+                    
+                    <button id="upload-btn" class="toolbar-btn" title="Upload message file">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                        <span>Upload</span>
+                    </button>
+                    <input type="file" id="file-upload" class="hidden">
+                    
+                    <button id="paste-btn" class="toolbar-btn" title="Paste from Clipboard (Ctrl+V)">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+                        <span>Paste</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button id="undo-btn" class="toolbar-btn" title="Undo (Ctrl+Z)" disabled>
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <button id="redo-btn" class="toolbar-btn" title="Redo (Ctrl+Y)" disabled>
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12.293 3.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 9H9a5 5 0 00-5 5v2a1 1 0 11-2 0v-2a7 7 0 017-7h5.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button id="save-template-btn" class="toolbar-btn primary" title="Save as template (Ctrl+S)">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/></svg>
+                        <span>Save</span>
+                    </button>
+                    <button id="clear-all-btn" class="toolbar-btn danger" title="Clear all records">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Tree Editor Panel -->
+            <section class="editor-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>
+                        Message Structure
+                    </h2>
+                    <div class="panel-actions">
+                        <button id="expand-all-btn" class="panel-action-btn" title="Expand all">
+                            <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                            <span>Expand</span>
+                        </button>
+                        <button id="collapse-all-btn" class="panel-action-btn" title="Collapse all">
+                            <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                            <span>Collapse</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="tree-container" class="tree-container" role="tree" aria-label="Message structure tree">
+                    <div id="tree-empty-state" class="tree-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                        </svg>
+                        <p>No nodes yet</p>
+                        <span>Click "Add Node" or load a template to start</span>
+                    </div>
+                </div>
+                
+                <div class="panel-footer">
+                    <button id="add-record-btn" class="add-node-btn">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                        Add Node
+                    </button>
+                    <button id="add-child-btn" class="add-node-btn secondary" disabled title="Select a node first">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                        Add Child
+                    </button>
+                </div>
+            </section>
+
+            <!-- Properties Sidebar -->
+            <aside id="properties-sidebar" class="properties-sidebar">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                        Properties
+                    </h2>
+                    <button id="toggle-sidebar-btn" class="sidebar-toggle" title="Collapse sidebar">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
+                
+                <div id="properties-content" class="sidebar-content">
+                    <div id="properties-empty" class="properties-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-10 h-10">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/>
+                        </svg>
+                        <p>Select a node</p>
+                        <span>Click on a node in the tree to edit its properties</span>
+                    </div>
+
+                    <div id="properties-form" class="properties-form hidden">
+                        <div class="property-group">
+                            <label for="node-type-select" class="property-label">
+                                <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+                                Node Type
+                            </label>
+                            <select id="node-type-select" class="property-select"></select>
+                        </div>
+
+                        <div class="property-group fields-group">
+                            <div class="property-label-row">
+                                <label class="property-label">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>
+                                    Fields
+                                </label>
+                                <button id="add-field-btn" class="property-add-btn" title="Add field">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                                </button>
+                            </div>
+                            <div id="fields-container" class="fields-list"></div>
+                        </div>
+
+                        <div class="property-group property-actions">
+                            <label class="property-label">
+                                <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+                                Quick Actions
+                            </label>
+                            <div class="action-buttons">
+                                <button id="duplicate-node-btn" class="action-btn" title="Duplicate (Ctrl+D)">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg>
+                                    Duplicate
+                                </button>
+                                <button id="copy-node-btn" class="action-btn" title="Copy (Ctrl+C)">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+                                    Copy
+                                </button>
+                                <button id="paste-node-btn" class="action-btn" title="Paste (Ctrl+V)" disabled>
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/></svg>
+                                    Paste
+                                </button>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="move-up-btn" class="action-btn" title="Move Up (Alt+↑)">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+                                    Up
+                                </button>
+                                <button id="move-down-btn" class="action-btn" title="Move Down (Alt+↓)">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                    Down
+                                </button>
+                                <button id="delete-node-btn" class="action-btn danger" title="Delete (Del)">
+                                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Output Panel (Bottom) -->
+        <section id="output-panel" class="output-panel">
+            <div class="output-header">
+                <button id="toggle-output-btn" class="output-toggle" aria-expanded="true" aria-controls="output-content">
+                    <svg class="toggle-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    <span>Generated Output</span>
+                    <span id="output-format-badge" class="output-format-badge">ASTM</span>
+                </button>
+                <div class="output-actions">
+                    <button id="copy-text-btn" class="output-btn" title="Copy as plain text">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+                        Copy
+                    </button>
+                    <button id="copy-rich-btn" class="output-btn" title="Copy with syntax highlighting">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/></svg>
+                        Formatted
+                    </button>
+                    <button id="download-btn" class="output-btn" title="Download as file">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        Download
+                    </button>
+                </div>
+            </div>
+            <div id="output-content" class="output-content">
+                <pre id="output-highlighted" class="output-code"></pre>
+            </div>
+            <div id="output-resize-handle" class="output-resize-handle"></div>
+        </section>
+        
+        <div id="copy-feedback" class="copy-feedback" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Modals -->
+    <div id="initial-xsd-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            </div>
+            <h2 class="modal-title">Welcome to Smart Message Builder</h2>
+            <p class="modal-text">To use XML formats with validation, upload your XML Schema Definition (.xsd) file. You can skip this and add it later.</p>
+            <div class="modal-actions">
+                <button class="modal-cancel-btn">Skip for now</button>
+                <button id="initial-xsd-upload-btn" class="modal-primary-btn">Upload XSD</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="save-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h2 class="modal-title">Save Template</h2>
+            <div class="modal-field">
+                <label for="template-name" class="modal-label">Template Name</label>
+                <input type="text" id="template-name" class="modal-input" placeholder="e.g., My HL7 Result Message" autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-cancel-btn">Cancel</button>
+                <button id="confirm-save-btn" class="modal-primary-btn">Save Template</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="confirm-modal" class="modal" role="alertdialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-icon warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            </div>
+            <h2 class="modal-title" id="confirm-title">Confirm Action</h2>
+            <p class="modal-text" id="confirm-message">Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button class="modal-cancel-btn">Cancel</button>
+                <button id="confirm-action-btn" class="modal-danger-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="tree-node-template">
+        <div class="tree-node" role="treeitem" tabindex="0" aria-expanded="true">
+            <div class="node-row">
+                <button class="node-toggle" aria-label="Toggle expand/collapse">
+                    <svg class="toggle-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div class="node-drag-handle" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6-12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+                </div>
+                <span class="node-type-badge"></span>
+                <span class="node-preview"></span>
+                <div class="node-actions">
+                    <button class="node-action-btn add-child-inline" title="Add child node">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <button class="node-action-btn delete-node-inline" title="Delete node">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="node-children" role="group"></div>
+        </div>
+    </template>
+
+    <template id="field-template">
+        <div class="field-row">
+            <div class="field-name-wrapper">
+                <input type="number" class="field-name-input field-name-numeric" placeholder="#" min="1">
+                <input type="text" class="field-name-input field-name-text hidden" placeholder="@attr">
+                <select class="field-name-input field-name-select hidden"></select>
+            </div>
+            <input type="text" class="field-value-input" placeholder="Value...">
+            <div class="field-actions">
+                <button class="field-action-btn timestamp-btn hidden" title="Insert current timestamp">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                </button>
+                <button class="field-action-btn remove-field-btn" title="Remove field">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Hidden compatibility elements for existing JS references -->
+    <button id="build-btn" class="hidden"></button>
+    <button id="copy-record-btn" class="hidden"></button>
+    <button id="paste-record-btn" class="hidden"></button>
+    <button id="duplicate-record-btn" class="hidden"></button>
+    <button id="select-all-btn" class="hidden"></button>
+    <div id="records-container" class="hidden"></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
